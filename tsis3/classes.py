@@ -103,5 +103,15 @@ acc1.money()
 """
 
 
+class Filtering:
+    def __init__(self, my_list):
+        self.my_list = my_list
+
+    def filter_list(self):
+        self.my_list = filter(lambda x: x % 2 == 0, self.my_list)
+        for element in self.my_list:
+            print(element)
 
 
+list1 = Filtering([1, 2, 3, 4, 5])
+list1.filter_list()
