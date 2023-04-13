@@ -2,7 +2,7 @@ import random
 import pygame
 
 pygame.init()
-WIDTH, HEIGHT = 800, 800
+WIDTH, HEIGHT = 600, 600
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 RED = (255, 0, 0)
 BLACK = (0, 0, 0)
@@ -68,14 +68,14 @@ class Snake:
         self.body[0].x += dx
         self.body[0].y += dy
 
-        if self.body[0].x > WIDTH // BLOCK_SIZE:
-            self.body[0].x = 0
+        if self.body[0].x >= WIDTH // BLOCK_SIZE:
+            quit()
         elif self.body[0].x < 0:
-            self.body[0].x = WIDTH // BLOCK_SIZE
+            quit()
         elif self.body[0].y < 0:
-            self.body[0].y = WIDTH // BLOCK_SIZE
-        elif self.body[0].y > HEIGHT // BLOCK_SIZE:
-            self.body[0].y = 0
+            quit()
+        elif self.body[0].y >= HEIGHT // BLOCK_SIZE:
+            quit()
 
         for block in self.body[1:]:
             if self.body[0].x == block.x and self.body[0].y == block.y:
@@ -99,11 +99,12 @@ def draw_grid():
 class Food:
     def __init__(self, x, y):
         self.location = Point(x, y)
+        self.color = GREEN
 
     def draw(self):
         pygame.draw.rect(
             SCREEN,
-            GREEN,
+            self.color,
             pygame.Rect(
                 self.location.x * BLOCK_SIZE,
                 self.location.y * BLOCK_SIZE,
@@ -118,9 +119,11 @@ def main():
     snake = Snake()
     food = Food(5, 5)
     dx, dy = 0, -1
+    color_change_food = GREEN
 
     while running:
         SCREEN.fill(BLACK)
+        food.color = color_change_food
 
         snake.level = snake.score // 5 + 1
         snake.speed = snake.level * 1.3 + 3
@@ -144,14 +147,35 @@ def main():
                 elif event.key == pygame.K_LEFT:
                     dx, dy = -1, 0
 
+
         snake.move(dx, dy)
+
         if snake.check_collision(food):
-            snake.body.append(
-                Point(snake.body[-1].x, snake.body[-1].y)
-            )
-            snake.score += 1
+            number = random.randint(0, 1)
+
+            if food.color == GREEN:
+                snake.body.append(
+                    Point(snake.body[-1].x, snake.body[-1].y)
+                )
+                snake.score += 1
+
+            elif food.color == BLUE:
+                snake.body.append(
+                    Point(snake.body[-1].x, snake.body[-1].y)
+                )
+                snake.body.append(
+                    Point(snake.body[-1].x, snake.body[-1].y)
+                )
+                snake.score += 2
+
+            if number == 0:
+                color_change_food = GREEN
+            elif number == 1:
+                color_change_food = BLUE
+
             pos_x = random.randint(1, WIDTH // BLOCK_SIZE - 2)
             pos_y = random.randint(1, HEIGHT // BLOCK_SIZE - 2)
+
 
             for block in snake.body[0:]:
                 if pos_x == block.x and pos_y == block.y:

@@ -2,7 +2,7 @@ import random
 import pygame
 
 pygame.init()
-WIDTH, HEIGHT = 800, 800
+WIDTH, HEIGHT = 600, 600
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 RED = (255, 0, 0)
 BLACK = (0, 0, 0)
@@ -68,14 +68,14 @@ class Snake:
         self.body[0].x += dx
         self.body[0].y += dy
 
-        if self.body[0].x > WIDTH // BLOCK_SIZE:
-            self.body[0].x = 0
+        if self.body[0].x >= WIDTH // BLOCK_SIZE:
+            quit()
         elif self.body[0].x < 0:
-            self.body[0].x = WIDTH // BLOCK_SIZE
+            quit()
         elif self.body[0].y < 0:
-            self.body[0].y = WIDTH // BLOCK_SIZE
-        elif self.body[0].y > HEIGHT // BLOCK_SIZE:
-            self.body[0].y = 0
+            quit()
+        elif self.body[0].y >= HEIGHT // BLOCK_SIZE:
+            quit()
 
         for block in self.body[1:]:
             if self.body[0].x == block.x and self.body[0].y == block.y:
