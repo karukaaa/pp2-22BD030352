@@ -1,4 +1,3 @@
-import csv
 import psycopg2
 
 conn = psycopg2.connect(
@@ -12,14 +11,19 @@ cur = conn.cursor()
 Q1 = "CREATE TABLE Phonebook (id SERIAL PRIMARY KEY, name VARCHAR(50), number INT)"
 Q2 = "INSERT INTO Phonebook (name, number) VALUES (%s, %s)"
 
+cur.execute("SELECT * FROM Phonebook")
+for x in cur:
+    print(x)
 
-way = int(input("console or file or update(0,1,2)?: "))
+
+way = int(input("console, file, update, query(0,1,2,3)?: "))
 
 if way == 0:
     name = input("Name: ")
     number = int(input("Number: "))
     cur.execute(Q2, (name, number))
     conn.commit()
+
 elif way == 2:
     id_num = input("Enter id: ")
     obj = input("Update name or number: ")
@@ -31,10 +35,11 @@ elif way == 2:
         cur.execute("UPDATE Phonebook SET number = %s WHERE id = %s", (new, id_num))
     conn.commit()
 
-
-cur.execute("SELECT table_schema FROM information_schema.tables WHERE table_name='Phonebook';")
-print(cur)
-
-cur.execute("SELECT * FROM Phonebook")
-for x in cur:
-    print(x)
+elif way == 3:
+    query = []
+    for x in range(2):
+        values = input("Enter filter and value: ")
+        query.append(values)
+    cur.execute(f"SELECT * FROM Phonebook WHERE {query[0]} = %s", (query[1],))
+    for x in cur:
+        print(x)
