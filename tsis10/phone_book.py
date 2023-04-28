@@ -10,7 +10,6 @@ cur = conn.cursor()
 
 Q1 = "CREATE TABLE Phonebook (id SERIAL PRIMARY KEY, name VARCHAR(50), number INT)"
 Q2 = "INSERT INTO Phonebook (name, number) VALUES (%s, %s)"
-Q4 = "DELETE FROM Phonebook WHERE "
 
 cur.execute("SELECT * FROM Phonebook")
 for x in cur:
