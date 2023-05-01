@@ -24,16 +24,18 @@ conn = psycopg2.connect(
     )
 cur = conn.cursor()
 
-cur.execute("SELECT * FROM Snake_users")
-for x in cur:
-    print(x)
-cur.execute("SELECT * FROM Snake_scores")
-for x in cur:
-    print(x)
 
+# cur.execute("CREATE TABLE Snake_users (id SERIAL PRIMARY KEY, username VARCHAR(50) NOT NULL UNIQUE)")
+# cur.execute("CREATE TABLE Snake_scores (user_id INT NOT NULL, score INT DEFAULT 0, FOREIGN KEY (user_id) REFERENCES Snake_users(id) ON DELETE CASCADE)")
+# conn.commit()
 
-#cur.execute("CREATE TABLE Snake_users (id SERIAL PRIMARY KEY, username VARCHAR(50) NOT NULL UNIQUE)")
-#cur.execute("CREATE TABLE Snake_scores (user_id INT NOT NULL, score INT DEFAULT 0, FOREIGN KEY (user_id) REFERENCES Snake_users(id) ON DELETE CASCADE)")
+# cur.execute("SELECT * FROM Snake_users")
+# for x in cur:
+#     print(x)
+# cur.execute("SELECT * FROM Snake_scores")
+# for x in cur:
+#     print(x)
+
 
 class Point:
     def __init__(self, x, y):
@@ -158,8 +160,6 @@ def name_entering():
 
                         cur.execute("INSERT INTO Snake_scores (user_id) VALUES (%s)", id_value)
                         conn.commit()
-                    else:
-                        print("already exists")
 
                     cur.execute("SELECT score FROM Snake_scores WHERE user_id = %s", (id_value,))
                     score_value = cur.fetchone()[0]
@@ -184,6 +184,7 @@ def name_entering():
 
 def main(score_value, id_value):
 
+    paused = False
     flag = False
     running = True
     snake = Snake()
@@ -197,24 +198,6 @@ def main(score_value, id_value):
     color_change_food = GREEN
 
     while running:
-        if not flag:
-            for x in range(snake.score):
-                snake.body.append(
-                    Point(snake.body[-1].x, snake.body[-1].y)
-                )
-            flag = True
-
-        SCREEN.fill(BLACK)
-        food.color = color_change_food
-
-        snake.level = snake.score // 5 + 1
-        snake.speed = snake.level * 1.3 + 3
-
-        score_txt = score_font.render(f"score: {snake.score}", True, WHITE)
-        level_txt = score_font.render(f"level: {snake.level}", True, WHITE)
-        SCREEN.blit(score_txt, (WIDTH/1.3, 0))
-        SCREEN.blit(level_txt, (0, 0))
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -228,50 +211,74 @@ def main(score_value, id_value):
                     dx, dy = 1, 0
                 elif event.key == pygame.K_LEFT:
                     dx, dy = -1, 0
+                if event.key == pygame.K_ESCAPE:
+                    paused = not paused
 
-        snake.move(dx, dy)
+        if not paused:
+            if not flag:
+                for x in range(snake.score):
+                    snake.body.append(
+                        Point(snake.body[-1].x, snake.body[-1].y)
+                    )
+                flag = True
 
-        if snake.check_collision(food):
-            number = random.randint(0, 1)
+            SCREEN.fill(BLACK)
+            food.color = color_change_food
 
-            if food.color == GREEN:
-                snake.body.append(
-                    Point(snake.body[-1].x, snake.body[-1].y)
-                )
-                snake.score += 1
+            snake.level = snake.score // 5 + 1
+            snake.speed = snake.level * 1.3 + 3
 
-            elif food.color == BLUE:
-                snake.body.append(
-                    Point(snake.body[-1].x, snake.body[-1].y)
-                )
-                snake.body.append(
-                    Point(snake.body[-1].x, snake.body[-1].y)
-                )
-                snake.score += 2
+            score_txt = score_font.render(f"score: {snake.score}", True, WHITE)
+            level_txt = score_font.render(f"level: {snake.level}", True, WHITE)
+            SCREEN.blit(score_txt, (WIDTH / 1.3, 0))
+            SCREEN.blit(level_txt, (0, 0))
 
-            if number == 0:
-                color_change_food = GREEN
-            elif number == 1:
-                color_change_food = BLUE
+            snake.move(dx, dy)
 
-            pos_x = random.randint(1, WIDTH // BLOCK_SIZE - 2)
-            pos_y = random.randint(1, HEIGHT // BLOCK_SIZE - 2)
+            if snake.check_collision(food):
+                number = random.randint(0, 1)
 
-            for block in snake.body[0:]:
-                if pos_x == block.x and pos_y == block.y:
-                    pos_x = random.randint(1, WIDTH // BLOCK_SIZE - 2)
-                    pos_y = random.randint(1, HEIGHT // BLOCK_SIZE - 2)
+                if food.color == GREEN:
+                    snake.body.append(
+                        Point(snake.body[-1].x, snake.body[-1].y)
+                    )
+                    snake.score += 1
 
-            food.location.x = pos_x
-            food.location.y = pos_y
+                elif food.color == BLUE:
+                    snake.body.append(
+                        Point(snake.body[-1].x, snake.body[-1].y)
+                    )
+                    snake.body.append(
+                        Point(snake.body[-1].x, snake.body[-1].y)
+                    )
+                    snake.score += 2
 
-        cur.execute("UPDATE Snake_scores SET score = %s WHERE user_id = %s", (snake.score, id_value))
-        conn.commit()
+                if number == 0:
+                    color_change_food = GREEN
+                elif number == 1:
+                    color_change_food = BLUE
 
-        snake.draw()
-        food.draw()
-        draw_grid()
-        pygame.display.flip()
-        clock.tick(snake.speed)
+                pos_x = random.randint(1, WIDTH // BLOCK_SIZE - 2)
+                pos_y = random.randint(1, HEIGHT // BLOCK_SIZE - 2)
+
+                for block in snake.body[0:]:
+                    if pos_x == block.x and pos_y == block.y:
+                        pos_x = random.randint(1, WIDTH // BLOCK_SIZE - 2)
+                        pos_y = random.randint(1, HEIGHT // BLOCK_SIZE - 2)
+
+                food.location.x = pos_x
+                food.location.y = pos_y
+
+
+            snake.draw()
+            food.draw()
+            draw_grid()
+            pygame.display.flip()
+            clock.tick(snake.speed)
+
+        else:
+            cur.execute("UPDATE Snake_scores SET score = %s WHERE user_id = %s", (snake.score, id_value))
+            conn.commit()
+
 
 name_entering()
