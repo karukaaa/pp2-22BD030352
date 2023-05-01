@@ -14,6 +14,26 @@ WHITE = (255, 255, 255)
 clock = pygame.time.Clock()
 score_font = pygame.font.SysFont("Verdana", 30)
 
+input_box = pygame.Rect(200, 300, 300, 60)
+
+conn = psycopg2.connect(
+        host="localhost",
+        user="postgres",
+        password="Shyngys1",
+        database="postgres"
+    )
+cur = conn.cursor()
+
+cur.execute("SELECT * FROM Snake_users")
+for x in cur:
+    print(x)
+cur.execute("SELECT * FROM Snake_scores")
+for x in cur:
+    print(x)
+
+
+#cur.execute("CREATE TABLE Snake_users (id SERIAL PRIMARY KEY, username VARCHAR(50) NOT NULL UNIQUE)")
+#cur.execute("CREATE TABLE Snake_scores (user_id INT NOT NULL, score INT DEFAULT 0, FOREIGN KEY (user_id) REFERENCES Snake_users(id) ON DELETE CASCADE)")
 
 class Point:
     def __init__(self, x, y):
@@ -115,26 +135,75 @@ class Food:
         )
 
 
-def main():
-    name = input("Enter user name: ")
-
-    conn = psycopg2.connect(
-        host="localhost",
-        user="postgres",
-        password="Shyngys1",
-        database="postgres"
-    )
-    cur = conn.cursor()
-    # cur.execute("CREATE TABLE Snake_users (id SERIAL PRIMARY KEY, name VARCHAR(50))")
-    # cur.execute("CREATE TABLE Snake_scores (userId INT PRIMARY KEY, FOREIGN KEY(userId) REFERENCES Users(id), score INT)")
+def name_entering():
+    username = ''
 
     running = True
+
+    while running:
+        SCREEN.fill(BLACK)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+
+                    cur.execute("SELECT id FROM Snake_users WHERE username = %s", (username,))
+                    id_value = cur.fetchone()
+                    if not id_value:
+                        cur.execute("INSERT INTO Snake_users (username) VALUES (%s)", (username,))
+                        cur.execute("SELECT id FROM Snake_users WHERE username = %s", (username,))
+                        id_value = cur.fetchone()
+
+                        cur.execute("INSERT INTO Snake_scores (user_id) VALUES (%s)", id_value)
+                        conn.commit()
+                    else:
+                        print("already exists")
+
+                    cur.execute("SELECT score FROM Snake_scores WHERE user_id = %s", (id_value,))
+                    score_value = cur.fetchone()[0]
+                    cur.execute("SELECT id FROM Snake_users WHERE username = %s", (username,))
+                    id_value = cur.fetchone()[0]
+
+                    main(score_value, id_value)
+                    running = False
+
+                elif event.key == pygame.K_BACKSPACE:
+                    username = username[:-1]
+                else:
+                    username += event.unicode
+
+        text_surface = score_font.render(username, True, RED)
+        pygame.draw.rect(SCREEN, RED, input_box, 2)
+        SCREEN.blit(text_surface, (input_box.x + 5, input_box.y + 5))
+
+        pygame.display.flip()
+        clock.tick(60)
+
+
+def main(score_value, id_value):
+
+    flag = False
+    running = True
     snake = Snake()
+
+    snake.speed = 0
+
+    snake.score = score_value
+
     food = Food(5, 5)
     dx, dy = 0, -1
     color_change_food = GREEN
 
     while running:
+        if not flag:
+            for x in range(snake.score):
+                snake.body.append(
+                    Point(snake.body[-1].x, snake.body[-1].y)
+                )
+            flag = True
+
         SCREEN.fill(BLACK)
         food.color = color_change_food
 
@@ -196,12 +265,13 @@ def main():
             food.location.x = pos_x
             food.location.y = pos_y
 
+        cur.execute("UPDATE Snake_scores SET score = %s WHERE user_id = %s", (snake.score, id_value))
+        conn.commit()
+
         snake.draw()
         food.draw()
         draw_grid()
         pygame.display.flip()
         clock.tick(snake.speed)
 
-
-if __name__ == '__main__':
-    main()
+name_entering()
