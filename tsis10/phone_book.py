@@ -1,4 +1,5 @@
 import psycopg2
+import csv
 
 conn = psycopg2.connect(
     host="localhost",
@@ -23,6 +24,23 @@ if way == 0:
     number = int(input("Number: "))
     cur.execute(Q2, (name, number))
     conn.commit()
+
+elif way == 1:
+    name = ''
+    number = ''
+
+    with open('phonelist.csv', newline='') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+
+        for row in reader:
+            cur.execute("SELECT name FROM Phonebook WHERE NUMBER = %s", (row[1],))
+            name = cur.fetchone()
+            if name:
+                print(f"number {row[1]} already exists")
+            else:
+                cur.execute("INSERT INTO Phonebook (name, number) VALUES (%s, %s)", (row[0], row[1]))
+                conn.commit()
+
 
 elif way == 2:
     query = []
