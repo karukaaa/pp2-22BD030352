@@ -24,10 +24,13 @@ if way == 0:
     number = int(input("Number: "))
 
     cur.execute("SELECT name FROM Phonebook WHERE NUMBER = %s", (number,))
-    name = cur.fetchone()
-    if name:
-        print(f"number {number} already exists")
-    else:
+    name_val = cur.fetchone()
+    cur.execute("SELECT number FROM Phonebook WHERE NAME = %s", (name,))
+    number_val = cur.fetchone()
+
+    if name_val or number_val:
+        print("number or name already exists")
+    elif not name_val and not number_val:
         cur.execute(Q2, (name, number))
         conn.commit()
 
@@ -47,7 +50,7 @@ elif way == 1:
 elif way == 2:
     query = []
     print("Input column, column value, what to update, new value")
-    for x in range(3):
+    for x in range(4):
         values = input()
         query.append(values)
 
