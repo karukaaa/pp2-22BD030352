@@ -4,10 +4,14 @@ import csv
 conn = psycopg2.connect(
     host="localhost",
     user="postgres",
-    password="Shyngys1",
+    password="1234",
     database="postgres"
 )
 cur = conn.cursor()
+
+
+# cur.execute("ALTER USER postgres WITH PASSWORD '1234';")
+# conn.commit()
 
 Q1 = "CREATE TABLE Phonebook (id SERIAL PRIMARY KEY, name VARCHAR(50), number INT)"
 Q2 = "INSERT INTO Phonebook (name, number) VALUES (%s, %s)"

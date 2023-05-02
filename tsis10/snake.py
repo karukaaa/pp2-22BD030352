@@ -19,7 +19,7 @@ input_box = pygame.Rect(200, 300, 300, 60)
 conn = psycopg2.connect(
         host="localhost",
         user="postgres",
-        password="Shyngys1",
+        password="1234",
         database="postgres"
     )
 cur = conn.cursor()
