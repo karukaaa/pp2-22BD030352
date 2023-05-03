@@ -22,7 +22,7 @@ Q1 = """
     $$ LANGUAGE plpgsql
     
 """
-#cur.execute("SELECT * FROM search_by_pattern('1')")
+# cur.execute("SELECT * FROM search_by_pattern('1')")
 
 Q2 = """
     CREATE OR REPLACE PROCEDURE insert_data(IN v_name text, v_number integer)
@@ -39,3 +39,46 @@ Q2 = """
 """
 # cur.execute("CALL insert_data(%s, %s)", ("aru", 8844))
 # conn.commit()
+
+Q3 = """
+    CREATE PROCEDURE delete_by_pattern(IN pattern text)
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        DELETE FROM Phonebook WHERE name = pattern OR CAST(number as text) = pattern;
+    END;
+    $$ 
+"""
+# cur.execute("CALL delete_by_pattern('4444')")
+# conn.commit()
+
+
+Q4 = """
+    CREATE OR REPLACE PROCEDURE insert_many_users(IN names TEXT[], IN numbers INT[], OUT invalid TEXT[])
+LANGUAGE plpgsql
+AS $$
+DECLARE 
+    i INTEGER;
+    existing_numbers INT[];
+BEGIN
+    invalid := ARRAY[]::TEXT[];
+    FOR i IN 1..array_length(names, 1) LOOP
+        IF EXISTS(SELECT * FROM Phonebook WHERE number = numbers[i]) THEN
+            invalid := array_append(invalid, names[i]);
+        ELSE
+            INSERT INTO Phonebook (name, number) VALUES (names[i], numbers[i]);
+        END IF;
+    END LOOP;
+END;
+$$;
+"""
+#
+# names = ['ddd', 'kaa']
+# numbers = [555, 666]
+#
+# invalid_data = []
+# cur.execute("CALL insert_many_users(%s::TEXT[], %s::INT[], %s)", (names, numbers, invalid_data))
+# result = cur.fetchall()
+# conn.commit()
+# for x in result:
+#     print(x, "name/s not correct")
