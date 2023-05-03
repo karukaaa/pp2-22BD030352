@@ -82,3 +82,20 @@ $$;
 # conn.commit()
 # for x in result:
 #     print(x, "name/s not correct")
+
+
+Q5 = """
+    CREATE OR REPLACE FUNCTION query_pagination_func(offset_v integer, limit_v integer)
+    RETURNS TABLE (id integer, name varchar, number integer)
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        RETURN QUERY EXECUTE format('SELECT id, name, number FROM Phonebook ORDER BY id OFFSET %s LIMIT %s', offset_v, limit_v);
+    END;
+    $$;
+"""
+#
+# cur.execute("SELECT * FROM query_pagination_func(2, 9)")
+# for x in cur:
+#     print(x)
+
